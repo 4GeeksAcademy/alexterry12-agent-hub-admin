@@ -1,9 +1,11 @@
 SPEC FILE
 
 AgentHub — Product Overview
+
 AgentHub is a B2B SaaS platform that rents AI agents to companies. An agent is a pre-configured intelligent assistant that can be equipped with modular skills — discrete capabilities such as web browsing, document reading, or calendar management — and deployed to handle specific business tasks. Clients rent agents under contracts that specify which skills are included, the rental period, and the total cost.
 
 The Admin
+
 The admin is an internal AgentHub operator (not a client). They use this panel to oversee the entire platform: monitoring revenue and financial losses from discounts, managing the user base, configuring and troubleshooting agents across all clients, maintaining the skills catalog, reviewing rental contracts, and resolving execution errors. The admin has a platform-wide view — they see every user, agent, contract, and error across all clients, rather than the scoped view an individual client would have.
 
 Tech Stack & ConstraintsTech Stack & Constraints

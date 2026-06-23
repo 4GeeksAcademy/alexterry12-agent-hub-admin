@@ -1,0 +1,857 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AgentHub Admin Panel</title>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          boxShadow: {
+            card: "0 12px 30px -18px rgba(15, 23, 42, 0.45)"
+          }
+        }
+      }
+    };
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: "Space Grotesk", sans-serif;
+    }
+
+    .mono {
+      font-family: "IBM Plex Mono", monospace;
+    }
+
+    .skill-panel {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transition: max-height 0.35s ease, opacity 0.28s ease;
+    }
+
+    .skill-panel.open {
+      max-height: 18rem;
+      opacity: 1;
+    }
+
+    .page-wash {
+      background:
+        radial-gradient(circle at 10% 10%, rgba(14, 165, 233, 0.14), transparent 35%),
+        radial-gradient(circle at 90% 20%, rgba(34, 197, 94, 0.1), transparent 40%),
+        radial-gradient(circle at 80% 90%, rgba(245, 158, 11, 0.08), transparent 35%);
+    }
+
+    .dark .page-wash {
+      background:
+        radial-gradient(circle at 10% 10%, rgba(14, 165, 233, 0.1), transparent 35%),
+        radial-gradient(circle at 90% 20%, rgba(34, 197, 94, 0.07), transparent 40%),
+        radial-gradient(circle at 80% 90%, rgba(245, 158, 11, 0.06), transparent 35%);
+    }
+  </style>
+</head>
+<body class="h-full bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+  <div class="min-h-full page-wash">
+    <div id="mobileSidebarBackdrop" class="fixed inset-0 z-30 hidden bg-slate-950/50 md:hidden"></div>
+
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-72 -translate-x-full border-r border-slate-200 bg-white/90 backdrop-blur transition-transform duration-300 dark:border-slate-800 dark:bg-slate-900/90 md:translate-x-0">
+      <div class="flex h-full flex-col">
+        <div class="border-b border-slate-200 px-5 py-5 dark:border-slate-800">
+          <p class="text-xs font-semibold uppercase tracking-[0.25em] text-sky-600 dark:text-sky-400">AgentHub</p>
+          <h1 class="mt-1 text-xl font-bold">Admin Panel</h1>
+        </div>
+        <nav id="sidebarNav" class="flex-1 space-y-1 p-3">
+          <a href="#" data-section="dashboard" class="nav-link flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
+            <span class="text-base">📊</span><span>Dashboard</span>
+          </a>
+          <a href="#" data-section="users" class="nav-link flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
+            <span class="text-base">👥</span><span>User Management</span>
+          </a>
+          <a href="#" data-section="agents" class="nav-link flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
+            <span class="text-base">🤖</span><span>Agent Management</span>
+          </a>
+          <a href="#" data-section="skills" class="nav-link flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
+            <span class="text-base">🧩</span><span>Skills</span>
+          </a>
+          <a href="#" data-section="contracts" class="nav-link flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
+            <span class="text-base">📄</span><span>Agent Contracts</span>
+          </a>
+          <a href="#" data-section="errors" class="nav-link flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
+            <span class="text-base">🚨</span><span>Error Log</span>
+          </a>
+        </nav>
+      </div>
+    </aside>
+
+    <div class="md:pl-72">
+      <header class="sticky top-0 z-20 border-b border-slate-200/80 bg-white/80 backdrop-blur dark:border-slate-800/90 dark:bg-slate-900/80">
+        <div class="flex items-center justify-between px-4 py-3 sm:px-6">
+          <div class="flex items-center gap-3">
+            <button id="mobileSidebarBtn" class="rounded-lg border border-slate-300 bg-white p-2 text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 md:hidden" aria-label="Open sidebar">
+              ☰
+            </button>
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Operations Console</p>
+          </div>
+          <button id="themeToggle" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" aria-label="Toggle dark mode">
+            <span id="themeIcon" aria-hidden="true">🌙</span>
+            <span id="themeLabel">Dark mode</span>
+          </button>
+        </div>
+      </header>
+
+      <main class="p-4 sm:p-6">
+        <section id="section-dashboard" class="panel-section space-y-6">
+          <div>
+            <h2 class="text-2xl font-bold">Dashboard</h2>
+            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Platform-wide financial and operational summary for this month.</p>
+          </div>
+          <div id="dashboardCards" class="grid grid-cols-1 gap-4 md:grid-cols-2"></div>
+          <div class="flex min-h-52 items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-white/70 p-6 text-center text-lg font-semibold text-slate-500 shadow-card dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-400">
+            Weekly Activity Chart
+          </div>
+        </section>
+
+        <section id="section-users" class="panel-section hidden space-y-6">
+          <div>
+            <h2 class="text-2xl font-bold">User Management</h2>
+            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Manage every registered user across all client organizations.</p>
+          </div>
+          <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-card dark:border-slate-800 dark:bg-slate-900">
+            <table class="min-w-full text-left text-sm">
+              <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-600 dark:bg-slate-800/60 dark:text-slate-300">
+                <tr>
+                  <th class="px-4 py-3">Name</th>
+                  <th class="px-4 py-3">Email</th>
+                  <th class="px-4 py-3">Plan</th>
+                  <th class="px-4 py-3">Status</th>
+                  <th class="px-4 py-3 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="section-agents" class="panel-section hidden space-y-6">
+          <div>
+            <h2 class="text-2xl font-bold">Agent Management</h2>
+            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Configure agent prompts, inspect capabilities, and monitor health statuses.</p>
+          </div>
+          <div id="agentsList" class="space-y-4"></div>
+        </section>
+
+        <section id="section-skills" class="panel-section hidden space-y-6">
+          <div>
+            <h2 class="text-2xl font-bold">Skills</h2>
+            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Maintain the modular capability catalog available to all agents.</p>
+          </div>
+          <div class="rounded-2xl border border-sky-300 bg-sky-50 p-4 text-sky-900 dark:border-sky-700 dark:bg-sky-950/40 dark:text-sky-200">
+            <p class="font-semibold">What is a skill?</p>
+            <p class="mt-1 text-sm">A skill is a modular capability, such as web browsing, document reading, or calendar management, that can be attached to an agent to expand what it can do.</p>
+          </div>
+          <div id="skillsGrid" class="grid grid-cols-1 gap-4 lg:grid-cols-2"></div>
+        </section>
+
+        <section id="section-contracts" class="panel-section hidden space-y-6">
+          <div>
+            <h2 class="text-2xl font-bold">Agent Contracts</h2>
+            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Review active and historical rental contracts and skill-level pricing.</p>
+          </div>
+          <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-card dark:border-slate-800 dark:bg-slate-900">
+            <table class="min-w-full text-left text-sm">
+              <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-600 dark:bg-slate-800/60 dark:text-slate-300">
+                <tr>
+                  <th class="px-4 py-3">Client</th>
+                  <th class="px-4 py-3">Rented Agent</th>
+                  <th class="px-4 py-3">Contracted Skills</th>
+                  <th class="px-4 py-3">Contract Dates</th>
+                  <th class="px-4 py-3">Total Amount Paid</th>
+                  <th class="px-4 py-3 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="contractsTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="section-errors" class="panel-section hidden space-y-6">
+          <div>
+            <h2 class="text-2xl font-bold">Error Log</h2>
+            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Newest-first execution failures reported across all agents.</p>
+          </div>
+          <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-card dark:border-slate-800 dark:bg-slate-900">
+            <table class="min-w-full text-left text-sm">
+              <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-600 dark:bg-slate-800/60 dark:text-slate-300">
+                <tr>
+                  <th class="px-4 py-3">Timestamp</th>
+                  <th class="px-4 py-3">Agent Name</th>
+                  <th class="px-4 py-3">Error Type</th>
+                  <th class="px-4 py-3">Description</th>
+                  <th class="px-4 py-3 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="errorsTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div id="actionMenu" class="fixed z-40 hidden min-w-44 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-700 dark:bg-slate-900"></div>
+
+  <div id="modalBackdrop" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/60 px-4">
+    <div id="modalCard" class="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+      <div class="mb-4 flex items-center justify-between gap-4">
+        <h3 id="modalTitle" class="text-lg font-bold">Details</h3>
+        <button id="modalCloseBtn" class="rounded-lg border border-slate-300 px-2 py-1 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800" aria-label="Close modal">✕</button>
+      </div>
+      <div id="modalBody" class="max-h-[70vh] overflow-y-auto"></div>
+    </div>
+  </div>
+
+  <script>
+    const state = {
+      activeSection: "dashboard",
+      users: [
+        { id: "u1", name: "Maya Stone", email: "maya@northpeak.ai", plan: "Enterprise", status: "active", company: "NorthPeak", joined: "2026-01-12" },
+        { id: "u2", name: "Jonas Reed", email: "jonas@latticeops.io", plan: "Pro", status: "active", company: "LatticeOps", joined: "2026-02-03" },
+        { id: "u3", name: "Talia Kim", email: "talia@brightside.health", plan: "Starter", status: "suspended", company: "BrightSide Health", joined: "2025-11-22" },
+        { id: "u4", name: "Erik Vaughn", email: "erik@pulseforge.com", plan: "Enterprise", status: "active", company: "PulseForge", joined: "2026-03-19" },
+        { id: "u5", name: "Neha Patel", email: "neha@orbitallegal.co", plan: "Pro", status: "inactive", company: "Orbital Legal", joined: "2025-10-08" }
+      ],
+      agents: [
+        {
+          id: "a1",
+          name: "Atlas Support",
+          owner: "NorthPeak",
+          status: "active",
+          skills: ["Web Browsing", "Document Reader", "CRM Sync"],
+          systemPrompt: "You are Atlas Support, a high-context support specialist. Verify ticket metadata, summarize previous interactions, and provide concise next actions. Ask clarifying questions before escalating."
+        },
+        {
+          id: "a2",
+          name: "Ledger Guard",
+          owner: "PulseForge",
+          status: "failing",
+          skills: ["Spreadsheet Analyst", "Policy Checker", "Webhook Runner"],
+          systemPrompt: "You are Ledger Guard. Validate transaction feeds, flag anomalies above tolerance thresholds, and explain risk rationale in plain language."
+        },
+        {
+          id: "a3",
+          name: "Calendar Pilot",
+          owner: "LatticeOps",
+          status: "inactive",
+          skills: ["Calendar Management", "Email Drafting"],
+          systemPrompt: "You are Calendar Pilot. Prioritize meetings by urgency and attendee role, then propose optimal slots while honoring no-meeting windows."
+        },
+        {
+          id: "a4",
+          name: "Doc Navigator",
+          owner: "BrightSide Health",
+          status: "active",
+          skills: ["Document Reader", "Knowledge Retrieval", "Redaction"],
+          systemPrompt: "You are Doc Navigator. Extract key information from uploaded material and provide citations with section references where possible."
+        }
+      ],
+      skills: [
+        {
+          id: "s1",
+          name: "Web Browsing",
+          description: "Find and summarize trustworthy online sources in real time for decision support."
+        },
+        {
+          id: "s2",
+          name: "Document Reader",
+          description: "Read long-form documents, identify key passages, and return concise summaries with references."
+        },
+        {
+          id: "s3",
+          name: "Calendar Management",
+          description: "Coordinate events, suggest meeting windows, and reduce schedule conflicts automatically."
+        },
+        {
+          id: "s4",
+          name: "CRM Sync",
+          description: "Create and update customer records and ticket context in connected CRM systems."
+        },
+        {
+          id: "s5",
+          name: "Knowledge Retrieval",
+          description: "Search private knowledge bases with contextual ranking to ground responses in company data."
+        },
+        {
+          id: "s6",
+          name: "Redaction",
+          description: "Detect and mask sensitive data before output leaves the agent execution pipeline."
+        }
+      ],
+      contracts: [
+        {
+          id: "c1",
+          client: "NorthPeak",
+          agent: "Atlas Support",
+          start: "2026-01-01",
+          end: "2026-12-31",
+          totalPaid: 42000,
+          skills: [
+            { name: "Web Browsing", price: 7000 },
+            { name: "Document Reader", price: 12000 },
+            { name: "CRM Sync", price: 9000 }
+          ]
+        },
+        {
+          id: "c2",
+          client: "PulseForge",
+          agent: "Ledger Guard",
+          start: "2025-07-01",
+          end: "2026-06-30",
+          totalPaid: 36500,
+          skills: [
+            { name: "Spreadsheet Analyst", price: 14000 },
+            { name: "Policy Checker", price: 9500 },
+            { name: "Webhook Runner", price: 7000 }
+          ]
+        },
+        {
+          id: "c3",
+          client: "LatticeOps",
+          agent: "Calendar Pilot",
+          start: "2026-02-01",
+          end: "2026-10-31",
+          totalPaid: 26000,
+          skills: [
+            { name: "Calendar Management", price: 11000 },
+            { name: "Email Drafting", price: 7000 }
+          ]
+        }
+      ],
+      errors: [
+        {
+          id: "e1",
+          timestamp: "2026-06-22T18:11:00Z",
+          agentName: "Ledger Guard",
+          severity: "critical",
+          description: "Webhook timeout while validating transaction batch #8942.",
+          trace: "TimeoutError: external webhook exceeded 10s\n  at executeSkill (runtime/runner.js:182)\n  at processBatch (runtime/ledger.js:91)\n  correlationId=9f2f2d11-0a3a-42f0-a1d4-744a9fd31a93",
+          resolved: false
+        },
+        {
+          id: "e2",
+          timestamp: "2026-06-22T16:43:00Z",
+          agentName: "Atlas Support",
+          severity: "warning",
+          description: "CRM write retry threshold reached; queued for manual review.",
+          trace: "RetryLimitWarning: CRM Sync exhausted 5 retries\n  at syncTicket (skills/crm-sync.js:51)\n  ticketId=TK-11382",
+          resolved: false
+        },
+        {
+          id: "e3",
+          timestamp: "2026-06-21T11:08:00Z",
+          agentName: "Doc Navigator",
+          severity: "info",
+          description: "Minor OCR confidence drop in scanned appendix.",
+          trace: "Info: OCR confidence fell below 0.84 for 2 pages\n  at parseDocument (skills/doc-reader.js:233)\n  documentId=DOC-221",
+          resolved: false
+        }
+      ],
+      openMenu: null
+    };
+
+    const sectionIds = ["dashboard", "users", "agents", "skills", "contracts", "errors"];
+
+    const dashboardCards = [
+      {
+        label: "Total Revenue (This Month)",
+        value: "$184,500",
+        accent: "from-emerald-500/20 to-emerald-400/0",
+        iconBg: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300",
+        icon: "💰"
+      },
+      {
+        label: "Discount & Coupon Losses",
+        value: "$12,840",
+        accent: "from-amber-500/20 to-amber-400/0",
+        iconBg: "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300",
+        icon: "🏷️"
+      },
+      {
+        label: "Active Agents",
+        value: "126",
+        accent: "from-sky-500/20 to-sky-400/0",
+        iconBg: "bg-sky-100 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300",
+        icon: "✅"
+      },
+      {
+        label: "Failing Agents",
+        value: "9",
+        accent: "from-rose-500/20 to-rose-400/0",
+        iconBg: "bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300",
+        icon: "⚠️"
+      }
+    ];
+
+    const els = {
+      sidebar: document.getElementById("sidebar"),
+      mobileSidebarBtn: document.getElementById("mobileSidebarBtn"),
+      mobileSidebarBackdrop: document.getElementById("mobileSidebarBackdrop"),
+      navLinks: document.querySelectorAll(".nav-link"),
+      sections: document.querySelectorAll(".panel-section"),
+      dashboardCards: document.getElementById("dashboardCards"),
+      usersTableBody: document.getElementById("usersTableBody"),
+      agentsList: document.getElementById("agentsList"),
+      skillsGrid: document.getElementById("skillsGrid"),
+      contractsTableBody: document.getElementById("contractsTableBody"),
+      errorsTableBody: document.getElementById("errorsTableBody"),
+      actionMenu: document.getElementById("actionMenu"),
+      modalBackdrop: document.getElementById("modalBackdrop"),
+      modalTitle: document.getElementById("modalTitle"),
+      modalBody: document.getElementById("modalBody"),
+      modalCloseBtn: document.getElementById("modalCloseBtn"),
+      themeToggle: document.getElementById("themeToggle"),
+      themeIcon: document.getElementById("themeIcon"),
+      themeLabel: document.getElementById("themeLabel")
+    };
+
+    function currency(value) {
+      return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
+    }
+
+    function statusBadge(status) {
+      const map = {
+        active: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300",
+        suspended: "bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300",
+        inactive: "bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200",
+        failing: "bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300",
+        warning: "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300",
+        info: "bg-sky-100 text-sky-800 dark:bg-sky-900/50 dark:text-sky-300",
+        critical: "bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300",
+        resolved: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300"
+      };
+      const cls = map[status] || "bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200";
+      return `<span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${cls}">${status}</span>`;
+    }
+
+    function menuButton(dataset) {
+      return `<button class="menu-trigger rounded-lg border border-slate-300 px-2 py-1 text-base leading-none text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800" ${dataset}>⋮</button>`;
+    }
+
+    function renderDashboard() {
+      els.dashboardCards.innerHTML = dashboardCards.map((card) => `
+        <article class="rounded-2xl border border-slate-200 bg-gradient-to-br ${card.accent} p-4 shadow-card transition hover:-translate-y-0.5 dark:border-slate-700 dark:from-slate-900 dark:to-slate-900">
+          <div class="flex items-center justify-between">
+            <p class="text-sm font-medium text-slate-600 dark:text-slate-300">${card.label}</p>
+            <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl text-lg ${card.iconBg}">${card.icon}</span>
+          </div>
+          <p class="mt-4 text-2xl font-bold">${card.value}</p>
+        </article>
+      `).join("");
+    }
+
+    function renderUsers() {
+      els.usersTableBody.innerHTML = state.users.map((user) => `
+        <tr class="border-t border-slate-200 dark:border-slate-800">
+          <td class="px-4 py-3 font-medium">${user.name}</td>
+          <td class="px-4 py-3 text-slate-600 dark:text-slate-300">${user.email}</td>
+          <td class="px-4 py-3">${user.plan}</td>
+          <td class="px-4 py-3">${statusBadge(user.status)}</td>
+          <td class="px-4 py-3 text-right">${menuButton(`data-kind="user" data-id="${user.id}"`)}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderAgents() {
+      els.agentsList.innerHTML = state.agents.map((agent) => `
+        <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h3 class="text-lg font-semibold">${agent.name}</h3>
+              <p class="text-sm text-slate-600 dark:text-slate-300">Owner: ${agent.owner}</p>
+            </div>
+            <div class="flex items-center gap-2">
+              ${statusBadge(agent.status)}
+              ${menuButton(`data-kind="agent" data-id="${agent.id}"`)}
+            </div>
+          </div>
+          <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/60">
+            <button class="skill-toggle flex w-full items-center justify-between text-left" data-id="${agent.id}">
+              <span class="text-sm font-semibold">Skills (${agent.skills.length})</span>
+              <span class="chevron text-sm text-slate-500 transition-transform">⌄</span>
+            </button>
+            <div id="skill-panel-${agent.id}" class="skill-panel">
+              <ul class="mt-3 space-y-2 text-sm text-slate-700 dark:text-slate-300">
+                ${agent.skills.map((skill) => `<li class="rounded-lg bg-white px-3 py-2 dark:bg-slate-900/70">${skill}</li>`).join("")}
+              </ul>
+            </div>
+          </div>
+        </article>
+      `).join("");
+
+      document.querySelectorAll(".skill-toggle").forEach((toggle) => {
+        toggle.addEventListener("click", () => {
+          const panel = document.getElementById(`skill-panel-${toggle.dataset.id}`);
+          panel.classList.toggle("open");
+          toggle.querySelector(".chevron").classList.toggle("rotate-180");
+        });
+      });
+    }
+
+    function getSkillUsageCount(name) {
+      return state.agents.filter((agent) => agent.skills.includes(name)).length;
+    }
+
+    function renderSkills() {
+      els.skillsGrid.innerHTML = state.skills.map((skill) => `
+        <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h3 class="text-lg font-semibold">${skill.name}</h3>
+              <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">${skill.description}</p>
+            </div>
+            ${menuButton(`data-kind="skill" data-id="${skill.id}"`)}
+          </div>
+          <div class="mt-4">
+            <span class="inline-flex rounded-full bg-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-200">Used by ${getSkillUsageCount(skill.name)} agent${getSkillUsageCount(skill.name) === 1 ? "" : "s"}</span>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function renderContracts() {
+      els.contractsTableBody.innerHTML = state.contracts.map((contract) => `
+        <tr class="border-t border-slate-200 dark:border-slate-800">
+          <td class="px-4 py-3 font-medium">${contract.client}</td>
+          <td class="px-4 py-3">${contract.agent}</td>
+          <td class="px-4 py-3">
+            <div class="flex flex-wrap gap-1.5">
+              ${contract.skills.map((skill) => `<span class="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-medium text-slate-700 dark:bg-slate-700 dark:text-slate-200">${skill.name}</span>`).join("")}
+            </div>
+          </td>
+          <td class="px-4 py-3 mono text-xs">${contract.start} → ${contract.end}</td>
+          <td class="px-4 py-3 font-semibold">${currency(contract.totalPaid)}</td>
+          <td class="px-4 py-3 text-right">${menuButton(`data-kind="contract" data-id="${contract.id}"`)}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderErrors() {
+      const ordered = [...state.errors].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      els.errorsTableBody.innerHTML = ordered.map((error) => `
+        <tr class="border-t border-slate-200 ${error.resolved ? "opacity-60" : ""} dark:border-slate-800">
+          <td class="px-4 py-3 mono text-xs">${error.timestamp.replace("T", " ").replace("Z", " UTC")}</td>
+          <td class="px-4 py-3 font-medium">${error.agentName}</td>
+          <td class="px-4 py-3">${statusBadge(error.resolved ? "resolved" : error.severity)}</td>
+          <td class="px-4 py-3 text-slate-700 dark:text-slate-300">${error.description}</td>
+          <td class="px-4 py-3 text-right">${menuButton(`data-kind="error" data-id="${error.id}"`)}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderAll() {
+      renderDashboard();
+      renderUsers();
+      renderAgents();
+      renderSkills();
+      renderContracts();
+      renderErrors();
+    }
+
+    function closeMenu() {
+      state.openMenu = null;
+      els.actionMenu.classList.add("hidden");
+      els.actionMenu.innerHTML = "";
+    }
+
+    function openMenu(trigger, items) {
+      closeMenu();
+      const rect = trigger.getBoundingClientRect();
+      state.openMenu = { trigger, items };
+      els.actionMenu.innerHTML = items.map((item, index) => `
+        <button class="menu-item block w-full rounded-lg px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800" data-index="${index}">${item.label}</button>
+      `).join("");
+
+      els.actionMenu.classList.remove("hidden");
+      const menuRect = els.actionMenu.getBoundingClientRect();
+      let left = rect.right - menuRect.width;
+      if (left < 10) left = 10;
+      if (left + menuRect.width > window.innerWidth - 10) left = window.innerWidth - menuRect.width - 10;
+      const top = rect.bottom + 6;
+      els.actionMenu.style.left = `${left}px`;
+      els.actionMenu.style.top = `${top}px`;
+    }
+
+    function openModal(title, content, options = {}) {
+      els.modalTitle.textContent = title;
+      els.modalBody.innerHTML = content;
+      const sizeClasses = ["max-w-xl", "max-w-2xl", "max-w-3xl"];
+      document.getElementById("modalCard").classList.remove(...sizeClasses);
+      document.getElementById("modalCard").classList.add(options.wide ? "max-w-3xl" : "max-w-2xl");
+      els.modalBackdrop.classList.remove("hidden");
+      els.modalBackdrop.classList.add("flex");
+    }
+
+    function closeModal() {
+      els.modalBackdrop.classList.add("hidden");
+      els.modalBackdrop.classList.remove("flex");
+      els.modalBody.innerHTML = "";
+    }
+
+    function viewUser(userId) {
+      const user = state.users.find((u) => u.id === userId);
+      if (!user) return;
+      openModal("User Detail", `
+        <div class="space-y-3 text-sm">
+          <p><span class="font-semibold">Name:</span> ${user.name}</p>
+          <p><span class="font-semibold">Email:</span> ${user.email}</p>
+          <p><span class="font-semibold">Company:</span> ${user.company}</p>
+          <p><span class="font-semibold">Plan:</span> ${user.plan}</p>
+          <p><span class="font-semibold">Status:</span> ${statusBadge(user.status)}</p>
+          <p><span class="font-semibold">Joined:</span> <span class="mono">${user.joined}</span></p>
+        </div>
+      `);
+    }
+
+    function deleteUser(userId) {
+      state.users = state.users.filter((user) => user.id !== userId);
+      renderUsers();
+    }
+
+    function configureAgent(agentId) {
+      const agent = state.agents.find((a) => a.id === agentId);
+      if (!agent) return;
+      openModal("Configure Agent", `
+        <div class="space-y-3">
+          <p class="text-sm text-slate-600 dark:text-slate-300">Editing system prompt for <span class="font-semibold">${agent.name}</span>.</p>
+          <textarea id="promptEditor" class="mono min-h-48 w-full rounded-xl border border-slate-300 bg-slate-50 p-3 text-sm text-slate-800 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-sky-800">${agent.systemPrompt}</textarea>
+          <div class="flex justify-end">
+            <button id="savePromptBtn" class="rounded-lg bg-sky-600 px-3 py-2 text-sm font-semibold text-white hover:bg-sky-500">Save in Session</button>
+          </div>
+        </div>
+      `, { wide: true });
+
+      document.getElementById("savePromptBtn").addEventListener("click", () => {
+        const updated = document.getElementById("promptEditor").value.trim();
+        if (updated) {
+          agent.systemPrompt = updated;
+        }
+        closeModal();
+      });
+    }
+
+    function deleteAgent(agentId) {
+      state.agents = state.agents.filter((agent) => agent.id !== agentId);
+      renderAgents();
+      renderSkills();
+    }
+
+    function viewSkill(skillId) {
+      const skill = state.skills.find((s) => s.id === skillId);
+      if (!skill) return;
+      openModal("Skill Detail", `
+        <div class="space-y-3 text-sm">
+          <p><span class="font-semibold">Skill:</span> ${skill.name}</p>
+          <p><span class="font-semibold">Description:</span> ${skill.description}</p>
+          <p><span class="font-semibold">Enabled by:</span> ${getSkillUsageCount(skill.name)} agent${getSkillUsageCount(skill.name) === 1 ? "" : "s"}</p>
+        </div>
+      `);
+    }
+
+    function deleteSkill(skillId) {
+      const skill = state.skills.find((s) => s.id === skillId);
+      if (!skill) return;
+      state.skills = state.skills.filter((s) => s.id !== skillId);
+      state.agents = state.agents.map((agent) => ({
+        ...agent,
+        skills: agent.skills.filter((name) => name !== skill.name)
+      }));
+      renderSkills();
+      renderAgents();
+    }
+
+    function viewContract(contractId) {
+      const contract = state.contracts.find((c) => c.id === contractId);
+      if (!contract) return;
+      openModal("Contract Detail", `
+        <div class="space-y-4 text-sm">
+          <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <p><span class="font-semibold">Client:</span> ${contract.client}</p>
+            <p><span class="font-semibold">Rented Agent:</span> ${contract.agent}</p>
+            <p><span class="font-semibold">Start Date:</span> <span class="mono">${contract.start}</span></p>
+            <p><span class="font-semibold">End Date:</span> <span class="mono">${contract.end}</span></p>
+          </div>
+          <p class="text-base font-semibold">Total Paid: ${currency(contract.totalPaid)}</p>
+          <div>
+            <p class="mb-2 font-semibold">Skill Breakdown</p>
+            <div class="rounded-xl border border-slate-200 dark:border-slate-700">
+              ${contract.skills.map((skill) => `
+                <div class="flex items-center justify-between border-b border-slate-200 px-3 py-2 text-sm last:border-0 dark:border-slate-700">
+                  <span>${skill.name}</span>
+                  <span class="mono">${currency(skill.price)}</span>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        </div>
+      `);
+    }
+
+    function viewError(errorId) {
+      const error = state.errors.find((e) => e.id === errorId);
+      if (!error) return;
+      openModal("Error Detail", `
+        <div class="space-y-3 text-sm">
+          <p><span class="font-semibold">Timestamp:</span> <span class="mono">${error.timestamp}</span></p>
+          <p><span class="font-semibold">Agent:</span> ${error.agentName}</p>
+          <p><span class="font-semibold">Severity:</span> ${statusBadge(error.severity)}</p>
+          <p><span class="font-semibold">Description:</span> ${error.description}</p>
+          <div>
+            <p class="mb-2 font-semibold">Trace</p>
+            <pre class="mono overflow-x-auto rounded-xl bg-slate-950 p-3 text-xs text-slate-100">${error.trace}</pre>
+          </div>
+        </div>
+      `, { wide: true });
+    }
+
+    function markErrorResolved(errorId) {
+      const error = state.errors.find((e) => e.id === errorId);
+      if (!error) return;
+      error.resolved = true;
+      renderErrors();
+    }
+
+    function getMenuItems(kind, id) {
+      const config = {
+        user: [
+          { label: "View detail", onClick: () => viewUser(id) },
+          { label: "Delete", onClick: () => deleteUser(id) }
+        ],
+        agent: [
+          { label: "Configure", onClick: () => configureAgent(id) },
+          { label: "Delete", onClick: () => deleteAgent(id) }
+        ],
+        skill: [
+          { label: "View detail", onClick: () => viewSkill(id) },
+          { label: "Delete", onClick: () => deleteSkill(id) }
+        ],
+        contract: [
+          { label: "View detail", onClick: () => viewContract(id) }
+        ],
+        error: [
+          { label: "View detail", onClick: () => viewError(id) },
+          { label: "Mark as resolved", onClick: () => markErrorResolved(id) }
+        ]
+      };
+
+      if (kind === "error") {
+        const entry = state.errors.find((item) => item.id === id);
+        if (entry?.resolved) {
+          return [{ label: "View detail", onClick: () => viewError(id) }];
+        }
+      }
+
+      return config[kind] || [];
+    }
+
+    function setActiveSection(section) {
+      state.activeSection = section;
+      els.sections.forEach((panel) => {
+        panel.classList.toggle("hidden", panel.id !== `section-${section}`);
+      });
+
+      els.navLinks.forEach((link) => {
+        const isActive = link.dataset.section === section;
+        link.classList.toggle("bg-sky-100", isActive);
+        link.classList.toggle("text-sky-800", isActive);
+        link.classList.toggle("dark:bg-sky-900/40", isActive);
+        link.classList.toggle("dark:text-sky-200", isActive);
+      });
+    }
+
+    function syncThemeButton() {
+      const isDark = document.documentElement.classList.contains("dark");
+      els.themeIcon.textContent = isDark ? "☀️" : "🌙";
+      els.themeLabel.textContent = isDark ? "Light mode" : "Dark mode";
+    }
+
+    function openMobileSidebar() {
+      els.sidebar.classList.remove("-translate-x-full");
+      els.mobileSidebarBackdrop.classList.remove("hidden");
+    }
+
+    function closeMobileSidebar() {
+      if (window.innerWidth >= 768) return;
+      els.sidebar.classList.add("-translate-x-full");
+      els.mobileSidebarBackdrop.classList.add("hidden");
+    }
+
+    document.addEventListener("click", (event) => {
+      const trigger = event.target.closest(".menu-trigger");
+      if (trigger) {
+        const { kind, id } = trigger.dataset;
+        const sameTrigger = state.openMenu?.trigger === trigger;
+        if (sameTrigger) {
+          closeMenu();
+        } else {
+          openMenu(trigger, getMenuItems(kind, id));
+        }
+        return;
+      }
+
+      if (!event.target.closest("#actionMenu")) {
+        closeMenu();
+      }
+    });
+
+    els.actionMenu.addEventListener("click", (event) => {
+      const item = event.target.closest(".menu-item");
+      if (!item || !state.openMenu) return;
+      const selected = state.openMenu.items[Number(item.dataset.index)];
+      closeMenu();
+      selected?.onClick();
+    });
+
+    els.navLinks.forEach((link) => {
+      link.addEventListener("click", (event) => {
+        event.preventDefault();
+        setActiveSection(link.dataset.section);
+        closeMobileSidebar();
+      });
+    });
+
+    els.modalBackdrop.addEventListener("click", (event) => {
+      if (event.target === els.modalBackdrop) {
+        closeModal();
+      }
+    });
+
+    els.modalCloseBtn.addEventListener("click", closeModal);
+
+    els.themeToggle.addEventListener("click", () => {
+      document.documentElement.classList.toggle("dark");
+      syncThemeButton();
+    });
+
+    els.mobileSidebarBtn.addEventListener("click", openMobileSidebar);
+    els.mobileSidebarBackdrop.addEventListener("click", closeMobileSidebar);
+
+    window.addEventListener("resize", () => {
+      if (window.innerWidth >= 768) {
+        els.mobileSidebarBackdrop.classList.add("hidden");
+        els.sidebar.classList.remove("-translate-x-full");
+      } else {
+        els.sidebar.classList.add("-translate-x-full");
+      }
+    });
+
+    renderAll();
+    setActiveSection("dashboard");
+    syncThemeButton();
+  </script>
+</body>
+</html>
